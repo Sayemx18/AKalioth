@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=N0Kernel by EmanuelCN !!!
+kernel.string=N0Kernel by EmanuelCN (custom build)
 do.devicecheck=1
 do.modules=0
 do.systemless=1
@@ -33,17 +33,30 @@ ramdisk_compression=auto;
 # set permissions/ownership for included ramdisk files
 set_perm_recursive 0 0 750 750 $ramdisk/*;
 
-# Auto‑detect variant from zip name
+# Auto-detect variant from zip name
 case "$ZIPFILE" in
-  *-miui-5k*) v=miui-5k;;
-  *-miui*)    v=miui;;
   *-5k*)      v=5k;;
   *N0Kernel*) v=default;;
 esac
 
+# Miui detection
+build="$(file_getprop /vendor/build.prop "persist.sys.miui_gnss_pc")"
+case "$build" in
+    true)
+        if echo "${ZIPFILE:-}" | grep -q -- '-5k'; then
+            v=miui-5k
+            os_string="MIUI ROM & 5K Variant"
+        else
+            v=miui
+            os_string="MIUI ROM"
+        fi
+        ui_print "  -> $os_string is detected!"
+    ;;
+esac
+
 # If none are detected (adb sideload), let the user pick
 if [ -z "$v" ]; then
-  set -- miui miui-5k 5k default
+  set -- 5k default
   i=1; n=$#
   prev_option=""
   ui_print "Select DTBO variant:"
